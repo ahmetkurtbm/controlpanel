@@ -35,6 +35,14 @@ function basicAuthHeader(user: string) {
   return { Authorization: `Basic ${token}` };
 }
 
+// `new URL(path, base)` treats a leading "/" in `path` as root-relative,
+// which silently drops any path already present on `base` (e.g. the
+// "/api/prom" prefix on GRAFANA_PROM_URL). Join as plain strings instead so
+// the base's own path segment is preserved.
+function joinUrl(base: string, path: string): URL {
+  return new URL(base.replace(/\/+$/, "") + path);
+}
+
 export type PrometheusVector = {
   status: string;
   data: {
@@ -49,7 +57,7 @@ export type PrometheusVector = {
 
 /** Instant query, e.g. `sum(rate(traces_spanmetrics_calls_total{service_name="gatehub"}[5m]))` */
 export async function promQuery(query: string): Promise<PrometheusVector> {
-  const url = new URL("/api/v1/query", process.env.GRAFANA_PROM_URL);
+  const url = joinUrl(process.env.GRAFANA_PROM_URL!, "/api/v1/query");
   url.searchParams.set("query", query);
 
   const res = await fetch(url, {
@@ -68,7 +76,7 @@ export async function promQueryRange(
   query: string,
   { start, end, step }: { start: number; end: number; step: string },
 ): Promise<PrometheusVector> {
-  const url = new URL("/api/v1/query_range", process.env.GRAFANA_PROM_URL);
+  const url = joinUrl(process.env.GRAFANA_PROM_URL!, "/api/v1/query_range");
   url.searchParams.set("query", query);
   url.searchParams.set("start", String(start));
   url.searchParams.set("end", String(end));
@@ -86,7 +94,7 @@ export async function promQueryRange(
 
 /** Recent log lines for a LogQL query, e.g. `{service_name="gatehub"} |= "error"` */
 export async function lokiQuery(query: string, limit = 100) {
-  const url = new URL("/loki/api/v1/query_range", process.env.GRAFANA_LOKI_URL);
+  const url = joinUrl(process.env.GRAFANA_LOKI_URL!, "/loki/api/v1/query_range");
   url.searchParams.set("query", query);
   url.searchParams.set("limit", String(limit));
 
