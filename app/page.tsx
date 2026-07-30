@@ -19,13 +19,18 @@ async function ServiceCard({ service }: { service: string }) {
   }
 
   try {
+    // span_kind="SPAN_KIND_SERVER" restricts these to inbound requests
+    // handled BY this service, excluding its own outbound/client spans
+    // (e.g. GateHub's calls to oauth2.googleapis.com).
     const [rate, errors, duration] = await Promise.all([
-      promQuery(`sum(rate(traces_spanmetrics_calls_total{service_name="${service}"}[5m]))`),
       promQuery(
-        `sum(rate(traces_spanmetrics_calls_total{service_name="${service}",status_code="STATUS_CODE_ERROR"}[5m]))`,
+        `sum(rate(traces_spanmetrics_calls_total{service="${service}",span_kind="SPAN_KIND_SERVER"}[5m]))`,
       ),
       promQuery(
-        `histogram_quantile(0.95, sum(rate(traces_spanmetrics_latency_bucket{service_name="${service}"}[5m])) by (le))`,
+        `sum(rate(traces_spanmetrics_calls_total{service="${service}",span_kind="SPAN_KIND_SERVER",status_code="STATUS_CODE_ERROR"}[5m]))`,
+      ),
+      promQuery(
+        `histogram_quantile(0.95, sum(rate(traces_spanmetrics_latency_bucket{service="${service}",span_kind="SPAN_KIND_SERVER"}[5m])) by (le))`,
       ),
     ]);
 
