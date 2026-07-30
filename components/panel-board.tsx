@@ -18,10 +18,26 @@ function defaultPanels(services: string[]): PanelConfig[] {
       minutes: 30,
     },
     {
+      id: `${service}-errors`,
+      title: `${service} · Hata oranı`,
+      query: PRESETS.errors.query(service),
+      color: CHART_COLORS[(i + 4) % CHART_COLORS.length].value,
+      chartType: "bar" as ChartType,
+      minutes: 30,
+    },
+    {
       id: `${service}-duration`,
       title: `${service} · Gecikme p95`,
       query: PRESETS.duration_p95.query(service),
       color: CHART_COLORS[(i + 2) % CHART_COLORS.length].value,
+      chartType: "line" as ChartType,
+      minutes: 30,
+    },
+    {
+      id: `${service}-rate-by-route`,
+      title: `${service} · Rota bazında istek oranı`,
+      query: PRESETS.rate_by_route.query(service),
+      color: CHART_COLORS[(i + 1) % CHART_COLORS.length].value,
       chartType: "line" as ChartType,
       minutes: 30,
     },
@@ -220,7 +236,7 @@ export function PanelBoard({ services }: { services: string[] }) {
         </div>
       )}
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 xl:grid-cols-3">
         {panels.map((p) => (
           <ChartPanel
             key={p.id}

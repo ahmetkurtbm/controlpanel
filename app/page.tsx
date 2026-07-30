@@ -90,7 +90,7 @@ export default async function Home() {
   const session = await auth();
 
   return (
-    <main className="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-6 p-6 sm:p-8">
+    <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-6 p-6 sm:p-8">
       <header className="flex items-center justify-between">
         <Logo />
         <div className="flex items-center gap-3">
@@ -111,7 +111,7 @@ export default async function Home() {
         </div>
       </header>
 
-      <section className="flex flex-col gap-4">
+      <section className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         {SERVICES.map((service) => (
           <ServiceCard key={service} service={service} />
         ))}

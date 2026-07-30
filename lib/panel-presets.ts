@@ -1,7 +1,15 @@
 // Built-in metric presets, built from the labels Tempo's metrics-generator
 // actually produces (confirmed via Grafana Explore): traces_spanmetrics_*
 // with a `service` label (not `service_name`) and `span_kind`.
-export type PresetId = "rate" | "errors" | "duration_p95" | "duration_p50";
+export type PresetId =
+  | "rate"
+  | "errors"
+  | "duration_p95"
+  | "duration_p50"
+  | "rate_by_route"
+  | "errors_by_route"
+  | "calls_by_client"
+  | "outbound_rate";
 
 export const PRESETS: Record<PresetId, { label: string; unit: string; query: (service: string) => string }> = {
   rate: {
@@ -27,6 +35,30 @@ export const PRESETS: Record<PresetId, { label: string; unit: string; query: (se
     unit: "ms",
     query: (service) =>
       `histogram_quantile(0.50, sum(rate(traces_spanmetrics_latency_bucket{service="${service}",span_kind="SPAN_KIND_SERVER"}[5m])) by (le)) * 1000`,
+  },
+  rate_by_route: {
+    label: "Rota bazında istek oranı",
+    unit: "req/s",
+    query: (service) =>
+      `sum(rate(traces_spanmetrics_calls_total{service="${service}",span_kind="SPAN_KIND_SERVER"}[5m])) by (span_name)`,
+  },
+  errors_by_route: {
+    label: "Rota bazında hata oranı",
+    unit: "req/s",
+    query: (service) =>
+      `sum(rate(traces_spanmetrics_calls_total{service="${service}",span_kind="SPAN_KIND_SERVER",status_code="STATUS_CODE_ERROR"}[5m])) by (span_name)`,
+  },
+  calls_by_client: {
+    label: "Giden çağrılar (outbound)",
+    unit: "req/s",
+    query: (service) =>
+      `sum(rate(traces_spanmetrics_calls_total{service="${service}",span_kind="SPAN_KIND_CLIENT"}[5m])) by (span_name)`,
+  },
+  outbound_rate: {
+    label: "Toplam giden istek oranı",
+    unit: "req/s",
+    query: (service) =>
+      `sum(rate(traces_spanmetrics_calls_total{service="${service}",span_kind="SPAN_KIND_CLIENT"}[5m]))`,
   },
 };
 
