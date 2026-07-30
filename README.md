@@ -19,8 +19,12 @@ metrik/log/trace verisini tek bir yerden izlemek icin kisiye ozel bir panel.
    `GATEHUB_CLIENT_SECRET`, `AUTH_SECRET` (`openssl rand -base64 32`),
    `ADMIN_EMAILS` degerlerini doldur.
 3. Grafana Cloud > Administration > Service Accounts'tan **Viewer** rollu bir
-   hesap + token olustur, `GRAFANA_PROM_URL` / `GRAFANA_LOKI_URL` / `GRAFANA_API_TOKEN`
-   degerlerini doldur (datasource URL'leri Connections > Data sources sayfasinda).
+   hesap + token olustur. `GRAFANA_URL` (Grafana'ya giris yaptigin adres),
+   `GRAFANA_PROM_UID` / `GRAFANA_LOKI_UID` (Connections > Data sources'ta
+   ilgili datasource'a tiklayinca URL'de gorunen UID) ve `GRAFANA_API_TOKEN`
+   degerlerini doldur. (Ham prometheus-prod-xxx/logs-prod-xxx adresleri
+   yerine Grafana'nin kendi datasource-proxy API'si kullaniliyor, boylece
+   tek bir Bearer token her yerde yeterli oluyor.)
 4. `npm run dev` calistir, `http://localhost:3000` adresine git, "GateHub ile
    giris yap" ile dene.
 
