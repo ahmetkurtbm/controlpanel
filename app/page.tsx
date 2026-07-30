@@ -1,5 +1,8 @@
+import { LogOut } from "lucide-react";
 import { auth, signOut } from "@/auth";
 import { isGrafanaConfigured, promQuery } from "@/lib/grafana";
+import { Logo } from "@/components/logo";
+import { PanelBoard } from "@/components/panel-board";
 
 // Every connected app registers here once — this is the single place that
 // needs updating when a new project (receiptflow, testmetrix, ...) starts
@@ -9,10 +12,10 @@ const SERVICES = ["gatehub"];
 async function ServiceCard({ service }: { service: string }) {
   if (!isGrafanaConfigured()) {
     return (
-      <div className="rounded-lg border border-neutral-200 p-4 dark:border-neutral-800">
-        <h2 className="font-medium">{service}</h2>
-        <p className="mt-1 text-sm text-neutral-500">
-          Grafana baglantisi henuz yapilandirilmadi (GRAFANA_PROM_URL / GRAFANA_API_TOKEN).
+      <div className="rounded-xl border border-line bg-paper p-4">
+        <h2 className="font-medium text-ink">{service}</h2>
+        <p className="mt-1 text-sm text-muted">
+          Grafana bağlantısı henüz yapılandırılmadı (GRAFANA_PROM_URL / GRAFANA_API_TOKEN).
         </p>
       </div>
     );
@@ -39,30 +42,44 @@ async function ServiceCard({ service }: { service: string }) {
     const durationValue = duration.data.result[0]?.value?.[1] ?? "0";
 
     return (
-      <div className="rounded-lg border border-neutral-200 p-4 dark:border-neutral-800">
-        <h2 className="font-medium">{service}</h2>
-        <dl className="mt-3 grid grid-cols-3 gap-4 text-sm">
+      <div className="rounded-xl border border-line bg-paper p-4">
+        <div className="flex items-center justify-between">
+          <h2 className="font-medium text-ink">{service}</h2>
+          <span className="flex items-center gap-1.5 text-xs text-muted">
+            <span className="h-1.5 w-1.5 rounded-full bg-brand" /> canlı
+          </span>
+        </div>
+        <dl className="mt-4 grid grid-cols-3 gap-4">
           <div>
-            <dt className="text-neutral-500">Rate</dt>
-            <dd className="text-lg font-semibold">{Number(rateValue).toFixed(3)} req/s</dd>
+            <dt className="text-xs text-muted">İstek oranı</dt>
+            <dd className="mt-1 text-2xl font-semibold text-ink">
+              {Number(rateValue).toFixed(3)}
+              <span className="ml-1 text-xs font-normal text-muted">req/s</span>
+            </dd>
           </div>
           <div>
-            <dt className="text-neutral-500">Errors</dt>
-            <dd className="text-lg font-semibold">{Number(errorsValue).toFixed(3)} req/s</dd>
+            <dt className="text-xs text-muted">Hata oranı</dt>
+            <dd className="mt-1 text-2xl font-semibold text-ink">
+              {Number(errorsValue).toFixed(3)}
+              <span className="ml-1 text-xs font-normal text-muted">req/s</span>
+            </dd>
           </div>
           <div>
-            <dt className="text-neutral-500">Duration (p95)</dt>
-            <dd className="text-lg font-semibold">{(Number(durationValue) * 1000).toFixed(0)} ms</dd>
+            <dt className="text-xs text-muted">Gecikme (p95)</dt>
+            <dd className="mt-1 text-2xl font-semibold text-ink">
+              {(Number(durationValue) * 1000).toFixed(0)}
+              <span className="ml-1 text-xs font-normal text-muted">ms</span>
+            </dd>
           </div>
         </dl>
       </div>
     );
   } catch (error) {
     return (
-      <div className="rounded-lg border border-red-200 p-4 dark:border-red-900">
-        <h2 className="font-medium">{service}</h2>
-        <p className="mt-1 text-sm text-red-500">
-          Sorgu basarisiz: {error instanceof Error ? error.message : "bilinmeyen hata"}
+      <div className="rounded-xl border border-red-200 bg-red-50 p-4">
+        <h2 className="font-medium text-ink">{service}</h2>
+        <p className="mt-1 text-sm text-red">
+          Sorgu başarısız: {error instanceof Error ? error.message : "bilinmeyen hata"}
         </p>
       </div>
     );
@@ -73,22 +90,25 @@ export default async function Home() {
   const session = await auth();
 
   return (
-    <main className="mx-auto flex max-w-3xl flex-col gap-6 p-8">
+    <main className="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-6 p-6 sm:p-8">
       <header className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-semibold">Control Panel</h1>
-          <p className="text-sm text-neutral-500">{session?.user?.email}</p>
+        <Logo />
+        <div className="flex items-center gap-3">
+          <span className="text-sm text-muted">{session?.user?.email}</span>
+          <form
+            action={async () => {
+              "use server";
+              await signOut();
+            }}
+          >
+            <button
+              type="submit"
+              className="flex items-center gap-1.5 rounded-lg border border-line px-3 py-1.5 text-sm text-muted hover:bg-paper hover:text-ink"
+            >
+              <LogOut size={14} /> Çıkış
+            </button>
+          </form>
         </div>
-        <form
-          action={async () => {
-            "use server";
-            await signOut();
-          }}
-        >
-          <button type="submit" className="text-sm text-neutral-500 hover:underline">
-            Cikis yap
-          </button>
-        </form>
       </header>
 
       <section className="flex flex-col gap-4">
@@ -96,6 +116,8 @@ export default async function Home() {
           <ServiceCard key={service} service={service} />
         ))}
       </section>
+
+      <PanelBoard services={SERVICES} />
     </main>
   );
 }
