@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Plus, X } from "lucide-react";
 import { ChartPanel } from "@/components/chart-panel";
+import { Select } from "@/components/ui/select";
 import {
   CHART_COLORS,
   PRESET_META,
@@ -140,54 +141,40 @@ export function PanelBoard({
             </button>
           </div>
 
-          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-            <label className="flex flex-col gap-1 text-xs text-muted">
-              Servis
-              <select
-                value={service}
-                onChange={(e) => setService(e.target.value)}
-                className="rounded-md border border-line bg-canvas px-2 py-1.5 text-sm text-ink"
-              >
-                {services.map((s) => (
-                  <option key={s.service} value={s.service}>
-                    {s.service}
-                  </option>
-                ))}
-              </select>
-            </label>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <Select
+              label="Servis"
+              value={service}
+              onChange={setService}
+              options={services.map((s) => ({ value: s.service, label: s.service }))}
+            />
 
-            <label className="flex flex-col gap-1 text-xs text-muted">
-              Metrik
-              <select
-                value={preset}
-                onChange={(e) => setPreset(e.target.value as PresetId)}
-                disabled={useCustom}
-                className="rounded-md border border-line bg-canvas px-2 py-1.5 text-sm text-ink disabled:opacity-40"
-              >
-                {availablePresets.map((id) => (
-                  <option key={id} value={id}>
-                    {PRESET_META[id].label}
-                  </option>
-                ))}
-              </select>
-            </label>
+            <Select
+              label="Metrik"
+              value={preset}
+              onChange={setPreset}
+              disabled={useCustom}
+              options={availablePresets.map((id) => ({
+                value: id,
+                label: PRESET_META[id].label,
+                hint: PRESET_META[id].unit,
+              }))}
+            />
 
-            <label className="flex flex-col gap-1 text-xs text-muted">
-              Grafik türü
-              <select
-                value={chartType}
-                onChange={(e) => setChartType(e.target.value as ChartType)}
-                className="rounded-md border border-line bg-canvas px-2 py-1.5 text-sm text-ink"
-              >
-                <option value="area">Alan</option>
-                <option value="line">Çizgi</option>
-                <option value="bar">Çubuk</option>
-              </select>
-            </label>
+            <Select
+              label="Grafik türü"
+              value={chartType}
+              onChange={setChartType}
+              options={[
+                { value: "area", label: "Alan" },
+                { value: "line", label: "Çizgi" },
+                { value: "bar", label: "Çubuk" },
+              ]}
+            />
 
-            <div className="flex flex-col gap-1 text-xs text-muted">
-              Renk
-              <div className="flex items-center gap-1.5 pt-1.5">
+            <div>
+              <span className="mb-1 block text-xs text-muted">Renk</span>
+              <div className="flex h-[38px] items-center gap-2">
                 {CHART_COLORS.map((c) => (
                   <button
                     key={c.value}
@@ -206,11 +193,12 @@ export function PanelBoard({
             </div>
           </div>
 
-          <label className="mt-3 flex items-center gap-2 text-xs text-muted">
+          <label className="mt-4 flex w-fit cursor-pointer items-center gap-2 text-xs text-muted">
             <input
               type="checkbox"
               checked={useCustom}
               onChange={(e) => setUseCustom(e.target.checked)}
+              className="h-3.5 w-3.5 accent-[var(--green)]"
             />
             Özel PromQL yaz
           </label>

@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, useCallback } from "react";
 import { RefreshCw, Clock } from "lucide-react";
+import { Select } from "@/components/ui/select";
 
 export const TIME_RANGES = [
   { minutes: 15, label: "Son 15 dk" },
@@ -45,25 +46,18 @@ export function TimeRangePicker() {
 
   return (
     <div className="flex items-center gap-2">
-      <div className="flex items-center gap-1.5 rounded-lg border border-line bg-paper px-2.5 py-1.5">
-        <Clock size={14} className="text-muted" />
-        <select
-          value={minutes}
-          onChange={(e) => setMinutes(Number(e.target.value))}
-          className="bg-transparent text-sm text-ink outline-none"
-        >
-          {TIME_RANGES.map((r) => (
-            <option key={r.minutes} value={r.minutes}>
-              {r.label}
-            </option>
-          ))}
-        </select>
-      </div>
+      <Select
+        value={minutes}
+        onChange={setMinutes}
+        icon={<Clock size={14} />}
+        className="w-40"
+        options={TIME_RANGES.map((r) => ({ value: r.minutes, label: r.label }))}
+      />
       <button
         type="button"
         onClick={refresh}
         title="Yenile"
-        className="rounded-lg border border-line bg-paper p-2 text-muted transition-colors hover:bg-canvas hover:text-ink"
+        className="rounded-lg border border-line bg-paper p-2.5 text-muted transition-colors hover:border-brand/40 hover:text-ink"
       >
         <RefreshCw size={14} />
       </button>

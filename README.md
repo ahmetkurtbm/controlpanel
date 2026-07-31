@@ -30,5 +30,32 @@ metrik/log/trace verisini tek bir yerden izlemek icin kisiye ozel bir panel.
 
 ## Yeni servis eklemek
 
-`app/page.tsx` icindeki `SERVICES` dizisine servis adini ekle (GateHub'daki
-`OTEL_SERVICE_NAME` ile ayni olmali). Baska hicbir sey degismiyor.
+Bu repoda **hicbir degisiklik gerekmez** — servisler telemetrinin kendisinden
+kesfedilir. Baglamak istedigin projeye:
+
+1. `npm i @vercel/otel`
+2. Proje koküne `instrumentation.ts` ekle:
+   ```ts
+   import { registerOTel } from "@vercel/otel";
+   export function register() {
+     registerOTel({ serviceName: process.env.OTEL_SERVICE_NAME ?? "proje-adi" });
+   }
+   ```
+3. Vercel > Settings > Environment Variables:
+   ```
+   OTEL_SERVICE_NAME=proje-adi
+   OTEL_EXPORTER_OTLP_ENDPOINT=<Grafana Cloud OTLP endpoint>
+   OTEL_EXPORTER_OTLP_HEADERS=<Authorization=Basic ...>
+   ```
+   (Endpoint ve header tum projelerde ayni.)
+4. Deploy et, birkac istek at. Servis sol menude kendiliginden belirir.
+
+## Metrikler nereden geliyor?
+
+Uygulamalar yalnizca **trace** gonderir. Grafana Cloud tarafinda Tempo'nun
+metrics-generator'i bu trace'lerden `traces_spanmetrics_*` metriklerini
+uretir; panel sorgulari bunlari okur. Tempo bu metrikleri surume ve
+histogram moduna gore farkli isimlerle yayinladigi icin `lib/metrics-schema.ts`
+isimleri sabit yazmak yerine Prometheus'a sorup dogru sorguyu kurar. Hangi
+servisin hangi metrikleri yayinladigini **Metrik katalogu** sayfasindan
+gorebilirsin.
