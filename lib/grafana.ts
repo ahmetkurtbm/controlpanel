@@ -30,7 +30,7 @@ export function isGrafanaConfigured() {
   );
 }
 
-function basicAuthHeader(user: string) {
+export function basicAuthHeader(user: string) {
   const token = Buffer.from(`${user}:${process.env.GRAFANA_API_TOKEN}`).toString("base64");
   return { Authorization: `Basic ${token}` };
 }
@@ -39,7 +39,7 @@ function basicAuthHeader(user: string) {
 // which silently drops any path already present on `base` (e.g. the
 // "/api/prom" prefix on GRAFANA_PROM_URL). Join as plain strings instead so
 // the base's own path segment is preserved.
-function joinUrl(base: string, path: string): URL {
+export function joinUrl(base: string, path: string): URL {
   return new URL(base.replace(/\/+$/, "") + path);
 }
 
@@ -129,11 +129,27 @@ export async function promLabelValues(label: string, match?: string): Promise<st
   return json.data ?? [];
 }
 
+export type LokiStream = {
+  stream: Record<string, string>;
+  /** [unix nanoseconds as string, log line] */
+  values: Array<[string, string]>;
+};
+
 /** Recent log lines for a LogQL query, e.g. `{service_name="gatehub"} |= "error"` */
-export async function lokiQuery(query: string, limit = 100) {
+export async function lokiQuery(
+  query: string,
+  { minutes = 60, limit = 100 }: { minutes?: number; limit?: number } = {},
+): Promise<LokiStream[]> {
+  const endNs = Date.now() * 1e6;
+  const startNs = endNs - Math.max(1, minutes) * 60 * 1e9;
+
   const url = joinUrl(process.env.GRAFANA_LOKI_URL!, "/loki/api/v1/query_range");
   url.searchParams.set("query", query);
   url.searchParams.set("limit", String(limit));
+  url.searchParams.set("start", String(Math.round(startNs)));
+  url.searchParams.set("end", String(Math.round(endNs)));
+  // Newest first so the viewer shows the most recent lines without paging.
+  url.searchParams.set("direction", "backward");
 
   const res = await fetch(url, {
     headers: basicAuthHeader(process.env.GRAFANA_LOKI_USER!),
@@ -142,5 +158,6 @@ export async function lokiQuery(query: string, limit = 100) {
   if (!res.ok) {
     throw new Error(`Loki query failed: ${res.status} ${await res.text()}`);
   }
-  return res.json();
+  const json: { data?: { result?: LokiStream[] } } = await res.json();
+  return json.data?.result ?? [];
 }

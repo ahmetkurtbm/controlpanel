@@ -35,6 +35,8 @@ export type ServiceQueries = {
   queries: Partial<Record<PresetId, string>>;
   /** Every metric name this service publishes. */
   available: string[];
+  /** Seconds since the service last reported; drives the freshness badge. */
+  freshnessQuery: string;
 };
 
 export const CHART_COLORS = [

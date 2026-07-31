@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Activity, LayoutDashboard, Boxes, LogOut, CircleDot } from "lucide-react";
+import { Activity, LayoutDashboard, Boxes, LogOut, CircleDot, BellRing } from "lucide-react";
+import { AlertBadge } from "@/components/alert-badge";
 
 export function Sidebar({
   services,
@@ -55,11 +56,16 @@ export function Sidebar({
           <p className="px-3 pb-1.5 text-[11px] font-medium uppercase tracking-wider text-white/40">
             Yönetim
           </p>
+          <NavItem href="/alerts" icon={<BellRing size={16} />} active={pathname === "/alerts"}>
+            Uyarılar
+          </NavItem>
           <NavItem href="/metrics" icon={<Boxes size={16} />} active={pathname === "/metrics"}>
             Metrik kataloğu
           </NavItem>
         </div>
       </nav>
+
+      <AlertBadge />
 
       <div className="border-t border-white/10 px-3 py-3">
         <p className="truncate px-3 pb-2 text-xs text-white/50">{userEmail}</p>

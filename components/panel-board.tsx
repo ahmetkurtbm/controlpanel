@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Plus, X } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Plus, X, Download, Upload } from "lucide-react";
 import { ChartPanel } from "@/components/chart-panel";
 import { Select } from "@/components/ui/select";
 import {
@@ -49,6 +49,8 @@ export function PanelBoard({
 }) {
   const [panels, setPanels] = useState<PanelConfig[] | null>(null);
   const [showForm, setShowForm] = useState(false);
+  const [importError, setImportError] = useState<string | null>(null);
+  const fileInput = useRef<HTMLInputElement>(null);
 
   const [service, setService] = useState(services[0]?.service ?? "");
   const [preset, setPreset] = useState<PresetId>("rate");
@@ -104,6 +106,35 @@ export function PanelBoard({
     setPanels(defaultPanels(services));
   }
 
+  // Layouts live in localStorage (no database in this app), so export/import
+  // is how a dashboard moves to another browser or machine.
+  function exportPanels() {
+    const blob = new Blob([JSON.stringify(panels ?? [], null, 2)], {
+      type: "application/json",
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `controlpanel-${scope.replace(/[^a-z0-9]+/gi, "-")}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  async function importPanels(file: File) {
+    try {
+      const parsed = JSON.parse(await file.text());
+      if (!Array.isArray(parsed)) throw new Error("Dosya bir panel listesi içermiyor.");
+      const valid = parsed.filter(
+        (p): p is PanelConfig => typeof p?.query === "string" && typeof p?.title === "string",
+      );
+      if (valid.length === 0) throw new Error("Dosyada geçerli panel bulunamadı.");
+      setPanels(valid);
+      setImportError(null);
+    } catch (e) {
+      setImportError(e instanceof Error ? e.message : "Dosya okunamadı.");
+    }
+  }
+
   if (!panels) return null;
 
   return (
@@ -111,6 +142,33 @@ export function PanelBoard({
       <div className="flex items-center justify-between gap-3">
         <h2 className="text-sm font-semibold text-ink">Grafikler</h2>
         <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={exportPanels}
+            title="Panelleri dosyaya aktar"
+            className="rounded-lg p-1.5 text-muted transition-colors hover:bg-paper hover:text-ink"
+          >
+            <Download size={15} />
+          </button>
+          <button
+            type="button"
+            onClick={() => fileInput.current?.click()}
+            title="Panelleri dosyadan yükle"
+            className="rounded-lg p-1.5 text-muted transition-colors hover:bg-paper hover:text-ink"
+          >
+            <Upload size={15} />
+          </button>
+          <input
+            ref={fileInput}
+            type="file"
+            accept="application/json"
+            className="hidden"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) importPanels(file);
+              e.target.value = "";
+            }}
+          />
           <button
             type="button"
             onClick={resetPanels}
@@ -127,6 +185,12 @@ export function PanelBoard({
           </button>
         </div>
       </div>
+
+      {importError && (
+        <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red">
+          {importError}
+        </p>
+      )}
 
       {showForm && (
         <div className="rounded-xl border border-line bg-paper p-4">

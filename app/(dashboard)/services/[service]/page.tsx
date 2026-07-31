@@ -3,8 +3,12 @@ import { isGrafanaConfigured } from "@/lib/grafana";
 import { listServices } from "@/lib/services";
 import { getServiceQueries } from "@/lib/metrics-schema";
 import { PRESET_META } from "@/lib/panel-presets";
+import { ServiceStatus } from "@/components/service-status";
 import { StatCard } from "@/components/stat-card";
 import { PanelBoard } from "@/components/panel-board";
+import { LogViewer } from "@/components/log-viewer";
+import { TraceExplorer } from "@/components/trace-explorer";
+import { isTempoConfigured } from "@/lib/tempo";
 import { TimeRangePicker } from "@/components/time-range";
 
 export default async function ServicePage({
@@ -27,7 +31,10 @@ export default async function ServicePage({
       <div className="page-header">
         <div>
           <h1 className="text-lg font-semibold text-ink">{service}</h1>
-          <p className="text-sm text-muted">{sq.available.length} metrik yayınlanıyor</p>
+          <div className="flex items-center gap-3">
+            <p className="text-sm text-muted">{sq.available.length} metrik yayınlanıyor</p>
+            <ServiceStatus query={sq.freshnessQuery} />
+          </div>
         </div>
         <TimeRangePicker />
       </div>
@@ -70,6 +77,10 @@ export default async function ServicePage({
         </div>
 
         <PanelBoard scope={`service:${service}`} services={[sq]} />
+
+        {isTempoConfigured() && <TraceExplorer service={service} />}
+
+        <LogViewer service={service} />
       </div>
     </>
   );

@@ -1,6 +1,6 @@
 import { isGrafanaConfigured } from "@/lib/grafana";
 import { listServices } from "@/lib/services";
-import { getServiceQueries } from "@/lib/metrics-schema";
+import { getAllServiceQueries } from "@/lib/metrics-schema";
 import { PRESET_META, type PresetId } from "@/lib/panel-presets";
 
 // Answers "which metrics are we actually sending and reading?" — the raw
@@ -16,7 +16,7 @@ export default async function MetricsCatalogPage() {
   }
 
   const services = await listServices();
-  const all = await Promise.all(services.map((s) => getServiceQueries(s)));
+  const all = await getAllServiceQueries(services);
   const presetIds = Object.keys(PRESET_META) as PresetId[];
 
   return (

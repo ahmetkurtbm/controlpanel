@@ -6,9 +6,21 @@ metrik/log/trace verisini tek bir yerden izlemek icin kisiye ozel bir panel.
 - **Giris**: Grafana Cloud'a degil, **GateHub'a** giris yapilir (bu uygulama
   GateHub'a kayitli bir OAuth istemcisi). Sadece `ADMIN_EMAILS` listesindeki
   adresler icine girebilir.
-- **Veri**: Grafana Cloud'un ucretsiz tier'inda barinan Prometheus (Mimir) ve
-  Loki'ye, sunucu tarafinda, salt-okunur bir Service Account token'i ile
-  sorgu atilir (`lib/grafana.ts`). Kimse Grafana'nin kendi arayuzune girmez.
+- **Veri**: Grafana Cloud'un ucretsiz tier'inda barinan Prometheus (Mimir),
+  Loki ve Tempo'ya, sunucu tarafinda, salt-okunur bir token ile sorgu atilir
+  (`lib/grafana.ts`, `lib/tempo.ts`). Kimse Grafana'nin kendi arayuzune girmez.
+
+## Neler var
+
+- **Genel bakis** — her servis icin RED metrikleri (istek/hata/gecikme) ve
+  ozellestirilebilir grafik panolari.
+- **Servis detayi** — p50/p95/p99, rota kirilimlari, **trace listesi + span
+  waterfall** (yavas isteklerin nerede takildigini gormek icin), **canli log
+  akisi** (seviye filtresi ve metin aramasi ile).
+- **Uyarilar** — hata orani, gecikme ve "veri gelmiyor" esikleri sunucu
+  tarafinda degerlendirilir; sol menude aktif uyari rozeti gorunur.
+- **Metrik katalogu** — her servisin yayinladigi ham metrik adlari ve hangi
+  panellerin desteklendigi.
 
 ## Kurulum
 
@@ -49,6 +61,22 @@ kesfedilir. Baglamak istedigin projeye:
    ```
    (Endpoint ve header tum projelerde ayni.)
 4. Deploy et, birkac istek at. Servis sol menude kendiliginden belirir.
+
+## Log gonderme (opsiyonel)
+
+`@vercel/otel` yalnizca trace gonderir; log gondermez. Vercel'in Log Drain
+ozelligi ucretli plan gerektirdigi icin loglar uygulamadan **OpenTelemetry
+Logs SDK** ile ayni OTLP adresine gonderilir. Ornek: gatehub'daki
+`instrumentation.ts` (LoggerProvider kaydi) ve `lib/otel-logs.ts` (`log.info`
+/ `log.error` sarmalayicisi). Yeni bir projede loglari acmak icin ayni iki
+dosyayi kopyalayip `npm i @opentelemetry/exporter-logs-otlp-http` calistirmak
+yeterli — ek ortam degiskeni gerekmez.
+
+## Pano duzenleri
+
+Paneller tarayicinin localStorage'inda saklanir (bu uygulamanin veritabani
+yok). Baska bir tarayiciya tasimak icin panolarin sag ustundeki indirme /
+yukleme dugmelerini kullan.
 
 ## Metrikler nereden geliyor?
 

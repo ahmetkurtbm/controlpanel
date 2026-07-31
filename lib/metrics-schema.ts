@@ -96,6 +96,18 @@ export function callsQuery(
   return `sum(rate(${schema.callsMetric}${selector}[5m]))${grouping}`;
 }
 
+/**
+ * Seconds since this service last reported anything.
+ *
+ * A serverless app with no visitors legitimately emits nothing, so "no
+ * samples" can't be read as "down" — but "last seen 4 hours ago" vs "last
+ * seen 20 seconds ago" is still worth surfacing. Returns an empty result
+ * when the service has been silent for over a day.
+ */
+export function freshnessQuery(schema: ServiceSchema): string {
+  return `time() - max(max_over_time(timestamp(${schema.callsMetric}{service="${schema.service}"})[24h:5m]))`;
+}
+
 /** Resolves every preset into concrete PromQL for one service. */
 export async function getServiceQueries(service: string): Promise<ServiceQueries> {
   const schema = await getServiceSchema(service);
@@ -117,5 +129,21 @@ export async function getServiceQueries(service: string): Promise<ServiceQueries
   if (p99) queries.duration_p99 = p99;
   if (byRoute) queries.duration_by_route = byRoute;
 
-  return { service, queries, available: schema.available };
+  return {
+    service,
+    queries,
+    available: schema.available,
+    freshnessQuery: freshnessQuery(schema),
+  };
+}
+
+/**
+ * Resolves several services at once, dropping any that fail rather than
+ * rejecting the whole batch — one flaky lookup shouldn't blank the page.
+ */
+export async function getAllServiceQueries(services: string[]): Promise<ServiceQueries[]> {
+  const settled = await Promise.allSettled(services.map((s) => getServiceQueries(s)));
+  return settled
+    .filter((r): r is PromiseFulfilledResult<ServiceQueries> => r.status === "fulfilled")
+    .map((r) => r.value);
 }

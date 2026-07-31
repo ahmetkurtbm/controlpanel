@@ -2,8 +2,9 @@ import Link from "next/link";
 import { ArrowRight, ServerCrash } from "lucide-react";
 import { isGrafanaConfigured } from "@/lib/grafana";
 import { listServices } from "@/lib/services";
-import { getServiceQueries } from "@/lib/metrics-schema";
+import { getAllServiceQueries } from "@/lib/metrics-schema";
 import { PRESET_META, type ServiceQueries } from "@/lib/panel-presets";
+import { ServiceStatus } from "@/components/service-status";
 import { StatCard } from "@/components/stat-card";
 import { PanelBoard } from "@/components/panel-board";
 import { TimeRangePicker } from "@/components/time-range";
@@ -23,7 +24,7 @@ export default async function OverviewPage() {
 
   if (error) return <ErrorNotice message={error} />;
 
-  const all: ServiceQueries[] = await Promise.all(services.map((s) => getServiceQueries(s)));
+  const all: ServiceQueries[] = await getAllServiceQueries(services);
 
   return (
     <>
@@ -44,9 +45,9 @@ export default async function OverviewPage() {
           all.map((sq) => (
             <section key={sq.service} className="flex flex-col gap-3">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="h-2 w-2 rounded-full bg-brand" />
+                <div className="flex items-center gap-3">
                   <h2 className="text-sm font-semibold text-ink">{sq.service}</h2>
+                  <ServiceStatus query={sq.freshnessQuery} />
                 </div>
                 <Link
                   href={`/services/${encodeURIComponent(sq.service)}`}
