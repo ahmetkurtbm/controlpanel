@@ -36,6 +36,48 @@ body {
   color: var(--ink);
 }
 
+/* App shell */
+.sidebar {
+  position: sticky;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  width: 248px;
+  flex-shrink: 0;
+  height: 100vh;
+  background: #14231d;
+  border-right: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+@media (max-width: 900px) {
+  .sidebar {
+    width: 68px;
+  }
+  .sidebar span:not([class*="inline-flex"]),
+  .sidebar p,
+  .sidebar form span {
+    display: none;
+  }
+  .sidebar .inline-flex {
+    margin-inline: auto;
+  }
+}
+
+.page-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 18px 28px;
+  background: rgba(244, 247, 245, 0.85);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--line);
+}
+
 /* Login page */
 .login-page {
   min-height: 100vh;

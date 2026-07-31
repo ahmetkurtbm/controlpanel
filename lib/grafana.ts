@@ -92,6 +92,43 @@ export async function promQueryRange(
   return res.json();
 }
 
+/**
+ * All metric names matching a selector, e.g. `{service="gatehub"}`.
+ * Used to discover what Tempo's metrics-generator actually emits instead of
+ * hardcoding metric names that differ between Tempo versions and between
+ * classic/native histogram modes.
+ */
+export async function promMetricNames(match: string): Promise<string[]> {
+  const url = joinUrl(process.env.GRAFANA_PROM_URL!, "/api/v1/label/__name__/values");
+  url.searchParams.set("match[]", match);
+
+  const res = await fetch(url, {
+    headers: basicAuthHeader(process.env.GRAFANA_PROM_USER!),
+    next: { revalidate: 300 },
+  });
+  if (!res.ok) {
+    throw new Error(`Metric name lookup failed: ${res.status} ${await res.text()}`);
+  }
+  const json: { data?: string[] } = await res.json();
+  return json.data ?? [];
+}
+
+/** Distinct values of a label, e.g. every `service` sending data. */
+export async function promLabelValues(label: string, match?: string): Promise<string[]> {
+  const url = joinUrl(process.env.GRAFANA_PROM_URL!, `/api/v1/label/${label}/values`);
+  if (match) url.searchParams.set("match[]", match);
+
+  const res = await fetch(url, {
+    headers: basicAuthHeader(process.env.GRAFANA_PROM_USER!),
+    next: { revalidate: 300 },
+  });
+  if (!res.ok) {
+    throw new Error(`Label value lookup failed: ${res.status} ${await res.text()}`);
+  }
+  const json: { data?: string[] } = await res.json();
+  return json.data ?? [];
+}
+
 /** Recent log lines for a LogQL query, e.g. `{service_name="gatehub"} |= "error"` */
 export async function lokiQuery(query: string, limit = 100) {
   const url = joinUrl(process.env.GRAFANA_LOKI_URL!, "/loki/api/v1/query_range");

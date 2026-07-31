@@ -1,65 +1,40 @@
-// Built-in metric presets, built from the labels Tempo's metrics-generator
-// actually produces (confirmed via Grafana Explore): traces_spanmetrics_*
-// with a `service` label (not `service_name`) and `span_kind`.
+// Client-safe preset descriptors. The actual PromQL is resolved on the
+// server (see lib/metrics-schema.ts) because the right latency expression
+// depends on which histogram shape Tempo published for that service.
+
 export type PresetId =
   | "rate"
   | "errors"
   | "duration_p95"
   | "duration_p50"
+  | "duration_p99"
   | "rate_by_route"
   | "errors_by_route"
-  | "calls_by_client"
-  | "outbound_rate";
+  | "duration_by_route"
+  | "outbound_rate"
+  | "outbound_by_target";
 
-export const PRESETS: Record<PresetId, { label: string; unit: string; query: (service: string) => string }> = {
-  rate: {
-    label: "İstek oranı (Rate)",
-    unit: "req/s",
-    query: (service) =>
-      `sum(rate(traces_spanmetrics_calls_total{service="${service}",span_kind="SPAN_KIND_SERVER"}[5m]))`,
-  },
-  errors: {
-    label: "Hata oranı (Errors)",
-    unit: "req/s",
-    query: (service) =>
-      `sum(rate(traces_spanmetrics_calls_total{service="${service}",span_kind="SPAN_KIND_SERVER",status_code="STATUS_CODE_ERROR"}[5m]))`,
-  },
-  duration_p95: {
-    label: "Gecikme p95",
-    unit: "ms",
-    query: (service) =>
-      `histogram_quantile(0.95, sum(rate(traces_spanmetrics_latency_bucket{service="${service}",span_kind="SPAN_KIND_SERVER"}[5m])) by (le)) * 1000`,
-  },
-  duration_p50: {
-    label: "Gecikme p50 (medyan)",
-    unit: "ms",
-    query: (service) =>
-      `histogram_quantile(0.50, sum(rate(traces_spanmetrics_latency_bucket{service="${service}",span_kind="SPAN_KIND_SERVER"}[5m])) by (le)) * 1000`,
-  },
-  rate_by_route: {
-    label: "Rota bazında istek oranı",
-    unit: "req/s",
-    query: (service) =>
-      `sum(rate(traces_spanmetrics_calls_total{service="${service}",span_kind="SPAN_KIND_SERVER"}[5m])) by (span_name)`,
-  },
-  errors_by_route: {
-    label: "Rota bazında hata oranı",
-    unit: "req/s",
-    query: (service) =>
-      `sum(rate(traces_spanmetrics_calls_total{service="${service}",span_kind="SPAN_KIND_SERVER",status_code="STATUS_CODE_ERROR"}[5m])) by (span_name)`,
-  },
-  calls_by_client: {
-    label: "Giden çağrılar (outbound)",
-    unit: "req/s",
-    query: (service) =>
-      `sum(rate(traces_spanmetrics_calls_total{service="${service}",span_kind="SPAN_KIND_CLIENT"}[5m])) by (span_name)`,
-  },
-  outbound_rate: {
-    label: "Toplam giden istek oranı",
-    unit: "req/s",
-    query: (service) =>
-      `sum(rate(traces_spanmetrics_calls_total{service="${service}",span_kind="SPAN_KIND_CLIENT"}[5m]))`,
-  },
+export type PresetMeta = { label: string; unit: string };
+
+export const PRESET_META: Record<PresetId, PresetMeta> = {
+  rate: { label: "İstek oranı", unit: "req/s" },
+  errors: { label: "Hata oranı", unit: "req/s" },
+  duration_p50: { label: "Gecikme p50 (medyan)", unit: "ms" },
+  duration_p95: { label: "Gecikme p95", unit: "ms" },
+  duration_p99: { label: "Gecikme p99", unit: "ms" },
+  rate_by_route: { label: "Rota bazında istek oranı", unit: "req/s" },
+  errors_by_route: { label: "Rota bazında hata oranı", unit: "req/s" },
+  duration_by_route: { label: "Rota bazında gecikme p95", unit: "ms" },
+  outbound_rate: { label: "Giden çağrı oranı", unit: "req/s" },
+  outbound_by_target: { label: "Hedef bazında giden çağrılar", unit: "req/s" },
+};
+
+/** Server-resolved PromQL for one service; null when unsupported by its data. */
+export type ServiceQueries = {
+  service: string;
+  queries: Partial<Record<PresetId, string>>;
+  /** Every metric name this service publishes. */
+  available: string[];
 };
 
 export const CHART_COLORS = [
@@ -79,5 +54,5 @@ export type PanelConfig = {
   query: string;
   color: string;
   chartType: ChartType;
-  minutes: number;
+  unit?: string;
 };
