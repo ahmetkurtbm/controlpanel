@@ -45,9 +45,14 @@ export function Select<T extends string | number>({
   );
   const selected = options[selectedIndex];
 
+  // Opening always starts the keyboard highlight on the current value.
+  function openList() {
+    setHighlight(selectedIndex);
+    setOpen(true);
+  }
+
   useEffect(() => {
     if (!open) return;
-    setHighlight(selectedIndex);
 
     function onPointerDown(e: PointerEvent) {
       if (!rootRef.current?.contains(e.target as Node)) setOpen(false);
@@ -75,7 +80,7 @@ export function Select<T extends string | number>({
     if (!open) {
       if (["Enter", " ", "ArrowDown", "ArrowUp"].includes(e.key)) {
         e.preventDefault();
-        setOpen(true);
+        openList();
       }
       return;
     }
@@ -127,7 +132,7 @@ export function Select<T extends string | number>({
       <button
         type="button"
         disabled={disabled}
-        onClick={() => setOpen((v) => !v)}
+        onClick={() => (open ? setOpen(false) : openList())}
         onKeyDown={onKeyDown}
         aria-haspopup="listbox"
         aria-expanded={open}

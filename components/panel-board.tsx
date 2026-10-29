@@ -59,6 +59,8 @@ export function PanelBoard({
   const [customQuery, setCustomQuery] = useState("");
   const [useCustom, setUseCustom] = useState(false);
 
+  // localStorage only exists in the browser, so saved layouts are read after mount.
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     const raw = localStorage.getItem(storageKey(scope));
     if (raw) {
@@ -72,6 +74,7 @@ export function PanelBoard({
     setPanels(defaultPanels(services));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [scope]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   useEffect(() => {
     if (panels) localStorage.setItem(storageKey(scope), JSON.stringify(panels));

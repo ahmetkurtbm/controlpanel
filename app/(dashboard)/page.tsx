@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { ArrowRight, ServerCrash } from "lucide-react";
-import { isGrafanaConfigured } from "@/lib/grafana";
 import { listServices } from "@/lib/services";
 import { getAllServiceQueries } from "@/lib/metrics-schema";
 import { PRESET_META, type ServiceQueries } from "@/lib/panel-presets";
@@ -10,10 +9,6 @@ import { PanelBoard } from "@/components/panel-board";
 import { TimeRangePicker } from "@/components/time-range";
 
 export default async function OverviewPage() {
-  if (!isGrafanaConfigured()) {
-    return <SetupNotice />;
-  }
-
   let services: string[] = [];
   let error: string | null = null;
   try {
@@ -117,23 +112,6 @@ function ErrorNotice({ message }: { message: string }) {
           <h2 className="text-sm font-medium text-ink">Grafana&apos;ya bağlanılamadı</h2>
           <p className="mt-1 text-sm text-red">{message}</p>
         </div>
-      </div>
-    </div>
-  );
-}
-
-function SetupNotice() {
-  return (
-    <div className="p-6 sm:p-7">
-      <div className="rounded-xl border border-line bg-paper p-6">
-        <h2 className="text-sm font-medium text-ink">Grafana bağlantısı yapılandırılmadı</h2>
-        <p className="mt-2 text-sm text-muted">
-          <code className="font-mono">GRAFANA_PROM_URL</code>,{" "}
-          <code className="font-mono">GRAFANA_PROM_USER</code>,{" "}
-          <code className="font-mono">GRAFANA_LOKI_URL</code>,{" "}
-          <code className="font-mono">GRAFANA_LOKI_USER</code> ve{" "}
-          <code className="font-mono">GRAFANA_API_TOKEN</code> ortam değişkenlerini tanımla.
-        </p>
       </div>
     </div>
   );

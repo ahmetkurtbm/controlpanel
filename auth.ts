@@ -1,7 +1,11 @@
 import NextAuth from "next-auth";
+import Credentials from "next-auth/providers/credentials";
+import { isDemoMode } from "@/lib/mode";
 
-// GateHub is our self-hosted OAuth2/OIDC provider (better-auth). This mirrors
-// the working integration in the carrenting/receiptflow projects.
+// GateHub is our self-hosted OAuth2/OIDC provider (better-auth); this panel is
+// the example app that signs in through it. In demo mode (no Grafana
+// credentials, i.e. the public Vercel deployment) a one-click demo account is
+// offered instead, since there is no GateHub instance to talk to.
 const issuer = process.env.GATEHUB_ISSUER ?? "http://localhost:3000/api/auth";
 
 function adminEmails() {
@@ -16,10 +20,21 @@ export function isGateHubConfigured() {
 }
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
-  secret: process.env.AUTH_SECRET ?? "controlpanel-development-secret-change-me",
+  // Without AUTH_SECRET, sessions are signed with a key generated at build time.
+  secret: process.env.AUTH_SECRET ?? process.env.CONTROLPANEL_BUILD_SECRET,
   pages: { signIn: "/login" },
   session: { strategy: "jwt" },
   providers: [
+    ...(isDemoMode()
+      ? [
+          Credentials({
+            id: "demo",
+            name: "Demo",
+            credentials: {},
+            authorize: () => ({ id: "demo", name: "Demo kullanıcısı", email: "demo@controlpanel.local" }),
+          }),
+        ]
+      : []),
     {
       id: "gatehub",
       name: "GateHub",
@@ -47,7 +62,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   callbacks: {
     // Having a GateHub account is not enough — only allowlisted addresses may
     // reach the control panel. An empty allowlist denies everyone by design.
-    signIn({ user }) {
+    signIn({ user, account }) {
+      if (account?.provider === "demo") return isDemoMode();
       const allowed = adminEmails();
       const email = user.email?.toLowerCase();
       return Boolean(email && allowed.includes(email));

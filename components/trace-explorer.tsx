@@ -81,6 +81,8 @@ export function TraceExplorer({ service }: { service: string }) {
   }, [service, minutes, minDuration, status]);
 
   useEffect(() => {
+    // Polling fetch: load() flips the loading flag before the request, which is the intended sync with the server.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     load();
   }, [load, nonce]);
 

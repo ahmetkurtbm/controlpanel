@@ -8,10 +8,20 @@ orada durur, sorgular sunucu tarafında atılır, arayüz tamamen bu uygulamaya
 aittir. Kimsenin Grafana hesabı açmasına veya Grafana arayüzüne girmesine gerek
 yoktur.
 
+## Çalışma modları
+
+| Mod | Ne zaman | Veri | Giriş |
+|---|---|---|---|
+| **Demo** | Grafana değişkenleri boşken (Vercel) | `lib/demo.ts` gerçek Prometheus/Loki/Tempo yanıtı biçiminde örnek telemetri üretir; grafikler, uyarılar, loglar ve trace şelalesi aynen çalışır | "Demo olarak gir" düğmesi |
+| **Gerçek** | Grafana Cloud değişkenleri tanımlıyken (yerel) | Grafana Cloud | [GateHub](https://github.com/ahmetkurtbm/gatehub) ile tek oturum (SSO) |
+
+Bu proje, GateHub ortak girişinin örnek istemcisidir: OIDC authorization code + PKCE akışı
+burada gösterilir. Veritabanı kullanmaz.
+
 ## Çözdüğü problem
 
-Portföyümdeki projeler (GateHub, Kids Academy, ReceiptFlow, TestMetrix,
-CarRenting) ayrı ayrı Vercel'de çalışıyor. Bir tanesinde hata oranı yükseldiğinde
+Portföyümdeki projeler (GateHub, Kids Academy, ReceiptFlow, TestMetrix)
+ayrı ayrı Vercel'de çalışıyor. Bir tanesinde hata oranı yükseldiğinde
 ya da sayfa yavaşladığında bunu fark etmenin tek yolu siteyi elle açıp bakmaktı.
 Her proje için ayrı bir izleme kurmak da, hepsi için Grafana arayüzünde
 gezinmek de pratik değildi.

@@ -1,5 +1,4 @@
 import { notFound } from "next/navigation";
-import { isGrafanaConfigured } from "@/lib/grafana";
 import { listServices } from "@/lib/services";
 import { getServiceQueries } from "@/lib/metrics-schema";
 import { PRESET_META } from "@/lib/panel-presets";
@@ -18,8 +17,6 @@ export default async function ServicePage({
 }) {
   const { service: raw } = await params;
   const service = decodeURIComponent(raw);
-
-  if (!isGrafanaConfigured()) notFound();
 
   const services = await listServices();
   if (!services.includes(service)) notFound();

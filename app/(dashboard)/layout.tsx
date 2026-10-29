@@ -1,5 +1,4 @@
 import { auth, signOut } from "@/auth";
-import { isGrafanaConfigured } from "@/lib/grafana";
 import { listServices } from "@/lib/services";
 import { Sidebar } from "@/components/sidebar";
 import { TimeRangeProvider } from "@/components/time-range";
@@ -14,12 +13,10 @@ export default async function DashboardLayout({
   // A misconfigured or unreachable Grafana shouldn't blank the whole shell —
   // the sidebar still renders and the page below explains what's wrong.
   let services: string[] = [];
-  if (isGrafanaConfigured()) {
-    try {
-      services = await listServices();
-    } catch {
-      services = [];
-    }
+  try {
+    services = await listServices();
+  } catch {
+    services = [];
   }
 
   async function handleSignOut() {

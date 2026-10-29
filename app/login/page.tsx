@@ -1,5 +1,6 @@
 import { Activity, BarChart3, ShieldCheck } from "lucide-react";
 import { isGateHubConfigured, signIn } from "@/auth";
+import { isDemoMode } from "@/lib/mode";
 import { Logo } from "@/components/logo";
 
 export default function LoginPage() {
@@ -19,7 +20,7 @@ export default function LoginPage() {
               <br /> tek ekrandan tut.
             </h1>
             <p className="mt-3 text-sm text-emerald-50/80">
-              GateHub'a bağlı tüm uygulamaların istek oranı, hata oranı ve
+              GateHub&apos;a bağlı tüm uygulamaların istek oranı, hata oranı ve
               gecikme verilerini gerçek zamanlı izle.
             </p>
           </div>
@@ -41,9 +42,31 @@ export default function LoginPage() {
 
           <div>
             <p className="mt-2 text-sm text-muted">
-              Devam etmek için GateHub hesabınla giriş yap.
+              {isDemoMode()
+                ? "Örnek verilerle paneli hesap açmadan deneyebilirsin."
+                : "Devam etmek için GateHub hesabınla giriş yap."}
             </p>
           </div>
+
+          {isDemoMode() && (
+            <form
+              action={async () => {
+                "use server";
+                await signIn("demo", { redirectTo: "/" });
+              }}
+            >
+              <button
+                type="submit"
+                className="flex w-full items-center justify-center gap-2 rounded-lg bg-brand px-5 py-3 text-sm font-medium text-white transition-colors hover:bg-brand-dark"
+              >
+                Demo olarak gir
+              </button>
+              <p className="mt-3 text-xs text-muted">
+                Demo örnek telemetri verisiyle çalışır. Gerçek kurulumda giriş GateHub
+                tek oturum (SSO) ile yapılır.
+              </p>
+            </form>
+          )}
 
           {isGateHubConfigured() ? (
             <form
@@ -60,11 +83,13 @@ export default function LoginPage() {
               </button>
             </form>
           ) : (
-            <p className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
-              GATEHUB_CLIENT_ID / GATEHUB_CLIENT_SECRET ortam değişkenleri
-              henüz tanımlanmadı. Önce GateHub dashboard&apos;undan bu
-              uygulamayı bir OAuth istemcisi olarak kaydet.
-            </p>
+            !isDemoMode() && (
+              <p className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+                GATEHUB_CLIENT_ID / GATEHUB_CLIENT_SECRET ortam değişkenleri
+                henüz tanımlanmadı. Önce GateHub dashboard&apos;undan bu
+                uygulamayı bir OAuth istemcisi olarak kaydet.
+              </p>
+            )
           )}
         </div>
       </div>

@@ -1,17 +1,8 @@
 import Link from "next/link";
 import { AlertTriangle, CheckCircle2 } from "lucide-react";
-import { isGrafanaConfigured } from "@/lib/grafana";
 import { evaluateAlerts, THRESHOLDS, type Alert } from "@/lib/alerts";
 
 export default async function AlertsPage() {
-  if (!isGrafanaConfigured()) {
-    return (
-      <div className="p-6 sm:p-7">
-        <p className="text-sm text-muted">Grafana bağlantısı yapılandırılmadı.</p>
-      </div>
-    );
-  }
-
   let alerts: Alert[] = [];
   let error: string | null = null;
   try {

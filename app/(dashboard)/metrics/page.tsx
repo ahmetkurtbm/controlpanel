@@ -1,4 +1,3 @@
-import { isGrafanaConfigured } from "@/lib/grafana";
 import { listServices } from "@/lib/services";
 import { getAllServiceQueries } from "@/lib/metrics-schema";
 import { PRESET_META, type PresetId } from "@/lib/panel-presets";
@@ -7,14 +6,6 @@ import { PRESET_META, type PresetId } from "@/lib/panel-presets";
 // metric names each service publishes, plus which built-in panels those
 // names can support.
 export default async function MetricsCatalogPage() {
-  if (!isGrafanaConfigured()) {
-    return (
-      <div className="p-6 sm:p-7">
-        <p className="text-sm text-muted">Grafana bağlantısı yapılandırılmadı.</p>
-      </div>
-    );
-  }
-
   const services = await listServices();
   const all = await getAllServiceQueries(services);
   const presetIds = Object.keys(PRESET_META) as PresetId[];

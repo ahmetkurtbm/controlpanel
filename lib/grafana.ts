@@ -19,16 +19,15 @@ import "server-only";
 //
 // Nothing here is exposed to the browser — all calls happen in Server
 // Components / Route Handlers.
+//
+// Without these variables the panel runs in demo mode: every function below
+// answers from lib/demo.ts instead of the network (the public Vercel demo).
 
-export function isGrafanaConfigured() {
-  return Boolean(
-    process.env.GRAFANA_PROM_URL &&
-      process.env.GRAFANA_PROM_USER &&
-      process.env.GRAFANA_LOKI_URL &&
-      process.env.GRAFANA_LOKI_USER &&
-      process.env.GRAFANA_API_TOKEN,
-  );
-}
+import { DEMO_SERVICES, demoLogs, demoMetricNames, demoQuery, demoQueryRange } from "@/lib/demo";
+import { isDemoMode } from "@/lib/mode";
+
+export { isDemoMode };
+
 
 export function basicAuthHeader(user: string) {
   const token = Buffer.from(`${user}:${process.env.GRAFANA_API_TOKEN}`).toString("base64");
@@ -57,6 +56,7 @@ export type PrometheusVector = {
 
 /** Instant query, e.g. `sum(rate(traces_spanmetrics_calls_total{service_name="gatehub"}[5m]))` */
 export async function promQuery(query: string): Promise<PrometheusVector> {
+  if (isDemoMode()) return demoQuery(query);
   const url = joinUrl(process.env.GRAFANA_PROM_URL!, "/api/v1/query");
   url.searchParams.set("query", query);
 
@@ -76,6 +76,7 @@ export async function promQueryRange(
   query: string,
   { start, end, step }: { start: number; end: number; step: string },
 ): Promise<PrometheusVector> {
+  if (isDemoMode()) return demoQueryRange(query, { start, end, step });
   const url = joinUrl(process.env.GRAFANA_PROM_URL!, "/api/v1/query_range");
   url.searchParams.set("query", query);
   url.searchParams.set("start", String(start));
@@ -99,6 +100,7 @@ export async function promQueryRange(
  * classic/native histogram modes.
  */
 export async function promMetricNames(match: string): Promise<string[]> {
+  if (isDemoMode()) return demoMetricNames();
   const url = joinUrl(process.env.GRAFANA_PROM_URL!, "/api/v1/label/__name__/values");
   url.searchParams.set("match[]", match);
 
@@ -115,6 +117,7 @@ export async function promMetricNames(match: string): Promise<string[]> {
 
 /** Distinct values of a label, e.g. every `service` sending data. */
 export async function promLabelValues(label: string, match?: string): Promise<string[]> {
+  if (isDemoMode()) return label === "service" ? DEMO_SERVICES : [];
   const url = joinUrl(process.env.GRAFANA_PROM_URL!, `/api/v1/label/${label}/values`);
   if (match) url.searchParams.set("match[]", match);
 
@@ -140,6 +143,7 @@ export async function lokiQuery(
   query: string,
   { minutes = 60, limit = 100 }: { minutes?: number; limit?: number } = {},
 ): Promise<LokiStream[]> {
+  if (isDemoMode()) return demoLogs(query, { minutes, limit });
   const endNs = Date.now() * 1e6;
   const startNs = endNs - Math.max(1, minutes) * 60 * 1e9;
 

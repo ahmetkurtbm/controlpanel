@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
-import { isGrafanaConfigured } from "@/lib/grafana";
 import { evaluateAlerts } from "@/lib/alerts";
 
 export async function GET() {
@@ -8,10 +7,6 @@ export async function GET() {
   if (!session?.user) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
-  if (!isGrafanaConfigured()) {
-    return NextResponse.json({ alerts: [] });
-  }
-
   try {
     return NextResponse.json({ alerts: await evaluateAlerts() });
   } catch (error) {

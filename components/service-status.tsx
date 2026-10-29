@@ -63,6 +63,8 @@ export function ServiceStatus({ query }: { query: string }) {
   }, [query]);
 
   useEffect(() => {
+    // Polling fetch: load() flips the loading flag before the request, which is the intended sync with the server.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     load();
     const id = setInterval(load, 30_000);
     return () => clearInterval(id);

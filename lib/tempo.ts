@@ -1,5 +1,6 @@
 import "server-only";
-import { basicAuthHeader, joinUrl } from "@/lib/grafana";
+import { demoTrace, demoTraces } from "@/lib/demo";
+import { basicAuthHeader, isDemoMode, joinUrl } from "@/lib/grafana";
 
 // Tempo holds the individual request traces the metrics are derived from.
 // Same Basic Auth scheme as Prometheus/Loki: username is the numeric "User"
@@ -9,7 +10,7 @@ import { basicAuthHeader, joinUrl } from "@/lib/grafana";
 //   GRAFANA_TEMPO_USER  numeric "User" from that datasource page
 
 export function isTempoConfigured() {
-  return Boolean(
+  return isDemoMode() || Boolean(
     process.env.GRAFANA_TEMPO_URL &&
       process.env.GRAFANA_TEMPO_USER &&
       process.env.GRAFANA_API_TOKEN,
@@ -42,6 +43,7 @@ function buildTraceQL({ service, minDurationMs, errorsOnly }: SearchFilters) {
 }
 
 export async function tempoSearch(filters: SearchFilters): Promise<TraceSummary[]> {
+  if (isDemoMode()) return demoTraces(filters);
   const end = Math.floor(Date.now() / 1000);
   const start = end - Math.max(1, filters.minutes) * 60;
 
@@ -107,6 +109,7 @@ const SPAN_KINDS = [
 ] as const;
 
 export async function tempoTrace(traceId: string): Promise<Span[]> {
+  if (isDemoMode()) return demoTrace(traceId);
   const url = joinUrl(process.env.GRAFANA_TEMPO_URL!, `/api/traces/${encodeURIComponent(traceId)}`);
 
   const res = await fetch(url, {
