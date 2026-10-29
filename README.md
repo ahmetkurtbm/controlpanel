@@ -8,6 +8,8 @@ orada durur, sorgular sunucu tarafında atılır, arayüz tamamen bu uygulamaya
 aittir. Kimsenin Grafana hesabı açmasına veya Grafana arayüzüne girmesine gerek
 yoktur.
 
+![Control Panel giriş ekranı](docs/screenshots/ekran.png)
+
 ## Çalışma modları
 
 | Mod | Ne zaman | Veri | Giriş |
