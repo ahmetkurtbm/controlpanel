@@ -82,10 +82,7 @@ describe("getServiceQueries", () => {
   });
 
   it("hata veren servisi atlar, diğerlerini döndürür", async () => {
-    names.mockImplementation(async (selector) => {
-      if (selector.includes("kotu")) throw new Error("zaman aşımı");
-      return [];
-    });
+    names.mockResolvedValueOnce([]).mockRejectedValueOnce(new Error("zaman aşımı"));
     const result = await getAllServiceQueries(["iyi", "kotu"]);
     expect(result.map((r) => r.service)).toEqual(["iyi"]);
   });
