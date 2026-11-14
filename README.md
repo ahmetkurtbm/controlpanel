@@ -114,6 +114,15 @@ altyapımı gerçek bir işte kullanmış oluyorum.
 tarafında, salt-okunur bir erişim token'ı ile atılır; istemci bileşenleri
 uygulamanın kendi korumalı API rotalarından veri çeker.
 
+## Güvenlik ve sınırlar
+
+- Sorgu parametreleri sınırlıdır: `minutes` 1-1440, `limit` en fazla 500, `step` biçimi doğrulanır. Demo en fazla 2000 nokta üretir. Eskiden `minutes=100000000` tek istekle sunucu belleğini tüketirdi; artık yaklaşık 14 ms'de 65 KB'lık yanıt döner.
+- GateHub profilinde `email_verified` açıkça `false` ise giriş reddedilir; yalnızca izin listesindeki e-postalar girer.
+- Güvenlik başlıkları (X-Frame-Options, nosniff, Referrer-Policy) tüm yollarda.
+- **Yük testi:** oturumlu metrik ucu 30 dakikalık aralıkta yaklaşık 350-400 istek/sn, en ağır geçerli aralıkta (1440 dakika) yaklaşık 280 istek/sn verir; hata çıkmaz. Oturumsuz istekler hemen girişe yönlendirilir (yaklaşık 1600 istek/sn).
+
+Ölçümler yerel bir dizüstü bilgisayarda, tek süreçli üretim derlemesiyle ve demo moduyla `autocannon` kullanılarak alındı; kabaca fikir verir, canlı ortam rakamı değildir.
+
 ## Teknoloji
 
 Next.js 16 (App Router) · TypeScript · Tailwind CSS · Recharts · NextAuth v5 ·
