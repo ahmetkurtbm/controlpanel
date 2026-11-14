@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { promQueryRange } from "@/lib/grafana";
+import { parseMinutes, parseStep } from "@/lib/query-params";
 
 // Client chart components fetch through this route instead of calling
 // Grafana directly, so the Prometheus credentials never reach the browser.
@@ -12,15 +13,15 @@ export async function GET(req: NextRequest) {
 
   const { searchParams } = req.nextUrl;
   const query = searchParams.get("query");
-  const minutes = Number(searchParams.get("minutes") ?? "30");
-  const step = searchParams.get("step") ?? "30s";
+  const minutes = parseMinutes(searchParams.get("minutes"));
+  const step = parseStep(searchParams.get("step"));
 
   if (!query) {
     return NextResponse.json({ error: "missing query" }, { status: 400 });
   }
 
   const end = Math.floor(Date.now() / 1000);
-  const start = end - Math.max(1, minutes) * 60;
+  const start = end - minutes * 60;
 
   try {
     const result = await promQueryRange(query, { start, end, step });

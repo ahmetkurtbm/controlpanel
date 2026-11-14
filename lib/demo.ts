@@ -96,15 +96,26 @@ export function demoQuery(query: string): PrometheusVector {
   };
 }
 
+// Upper bound on points per series, whatever range/step the caller asks for.
+export const MAX_DEMO_POINTS = 2000;
+
 export function demoQueryRange(query: string, { start, end, step }: { start: number; end: number; step: string }): PrometheusVector {
-  const stepSeconds = Math.max(15, parseInt(step, 10) * (step.endsWith("m") ? 60 : 1) || 30);
+  const unit = step.endsWith("h") ? 3600 : step.endsWith("m") ? 60 : 1;
+  const requested = Math.max(15, parseInt(step, 10) * unit || 30);
+  // Widen the step instead of truncating, so the whole range stays covered.
+  const span = Number.isFinite(end - start) ? Math.max(0, end - start) : 0;
+  const stepSeconds = Math.max(requested, Math.ceil(span / (MAX_DEMO_POINTS - 1)));
+  const count = Math.min(MAX_DEMO_POINTS, Math.floor(span / stepSeconds) + 1);
   return {
     status: "success",
     data: {
       resultType: "matrix",
       result: seriesFor(query).map(({ service, label }) => {
         const values: Array<[number, string]> = [];
-        for (let t = start; t <= end; t += stepSeconds) values.push([t, String(valueFor(query, service, label, t))]);
+        for (let i = 0; i < count; i++) {
+          const t = start + i * stepSeconds;
+          values.push([t, String(valueFor(query, service, label, t))]);
+        }
         return { metric: metricLabels(service, label), values };
       }),
     },

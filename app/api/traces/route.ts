@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
+import { parseLimit, parseMinutes } from "@/lib/query-params";
 import { isTempoConfigured, tempoSearch } from "@/lib/tempo";
 
 export async function GET(req: NextRequest) {
@@ -23,10 +24,10 @@ export async function GET(req: NextRequest) {
   try {
     const traces = await tempoSearch({
       service,
-      minutes: Number(p.get("minutes") ?? "30"),
+      minutes: parseMinutes(p.get("minutes")),
       minDurationMs: Number(p.get("minDurationMs") ?? "0") || undefined,
       errorsOnly: p.get("errorsOnly") === "1",
-      limit: Number(p.get("limit") ?? "20"),
+      limit: parseLimit(p.get("limit"), 20),
     });
     return NextResponse.json({ traces });
   } catch (error) {

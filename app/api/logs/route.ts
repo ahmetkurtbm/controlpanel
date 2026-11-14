@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { lokiQuery } from "@/lib/grafana";
+import { parseLimit, parseMinutes } from "@/lib/query-params";
 
 export async function GET(req: NextRequest) {
   const session = await auth();
@@ -25,8 +26,8 @@ export async function GET(req: NextRequest) {
 
   try {
     const streams = await lokiQuery(query, {
-      minutes: Number(p.get("minutes") ?? "60"),
-      limit: Number(p.get("limit") ?? "100"),
+      minutes: parseMinutes(p.get("minutes"), 60),
+      limit: parseLimit(p.get("limit"), 100),
     });
 
     // Flatten streams into a single newest-first list; the label set that

@@ -1,5 +1,6 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
+import { isSignInAllowed } from "@/lib/auth-rules";
 import { isDemoMode } from "@/lib/mode";
 
 // GateHub is our self-hosted OAuth2/OIDC provider (better-auth); this panel is
@@ -61,12 +62,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   ],
   callbacks: {
     // Having a GateHub account is not enough — only allowlisted addresses may
-    // reach the control panel. An empty allowlist denies everyone by design.
-    signIn({ user, account }) {
+    // reach the control panel. An empty allowlist denies everyone by design, and
+    // an address GateHub explicitly reports as unverified is refused.
+    signIn({ user, account, profile }) {
       if (account?.provider === "demo") return isDemoMode();
-      const allowed = adminEmails();
-      const email = user.email?.toLowerCase();
-      return Boolean(email && allowed.includes(email));
+      return isSignInAllowed(user.email, adminEmails(), profile?.email_verified);
     },
     authorized({ auth: session }) {
       return Boolean(session?.user);
